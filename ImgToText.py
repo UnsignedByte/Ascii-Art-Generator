@@ -46,25 +46,25 @@ def GreyScale(img):
 
 while True:
     filename=input("FileName:")
-    try:
-        image = Image.open(fpath+'/input/%s' % filename)
-        if filename.split(".")[1]=="gif":
-            gif=[]
-            mypalette = image.getpalette()
-            while True:
-                try:
-                    image.putpalette(mypalette)
-                    new_im = Image.new("RGBA", image.size)
-                    new_im.paste(image)
-                    gif.append(GreyScale(new_im))
-                    image.seek(image.tell() + 1)
-                except EOFError:
-                    break
-            gif[0].save(fpath+'/output/%s.gif' %(filename.split(".")[0]),save_all=True,append_images=gif[1:])
-            Image.open(fpath+'/output/%s.gif' %(filename.split(".")[0])).show()
-        else:
-            image.convert("RGB")
-            GreyScale(image).save(fpath+"/output/%s.png" %(filename.split(".")[0]))
-            Image.open(fpath+'/output/%s.png' %(filename.split(".")[0])).show()
-    except Exception:
-        print("incompatible/missing file")
+    #try:
+    image = Image.open(fpath+'/input/%s' % filename)
+    if filename.split(".")[1]=="gif":
+        gif=[]
+        mypalette = image.getpalette()
+        while True:
+            try:
+                image.putpalette(mypalette)
+                new_im = Image.new("RGBA", image.size)
+                new_im.paste(image)
+                gif.append(GreyScale(new_im))
+                image.seek(image.tell() + 1)
+            except EOFError:
+                break
+        gif[0].save(fpath+'/output/%s.gif' %(filename.split(".")[0]),save_all=True,append_images=gif[1:])
+        Image.open(fpath+'/output/%s.gif' %(filename.split(".")[0])).show()
+    else:
+        image.convert("RGB")
+        GreyScale(image).save(fpath+"/output/%s.png" %(filename.split(".")[0]))
+        Image.open(fpath+'/output/%s.png' %(filename.split(".")[0])).show()
+    #except Exception:
+ #       print("incompatible/missing file")
