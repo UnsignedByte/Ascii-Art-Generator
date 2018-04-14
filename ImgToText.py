@@ -1,5 +1,6 @@
 from PIL import Image,ImageDraw,ImageFont
 import os
+from colorsys import rgb_to_hls, hls_to_rgb
 #grey=list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
 fpath = os.path.dirname(os.path.abspath(__file__))
 
@@ -20,23 +21,27 @@ def GreyScale(img):
     w=round(w)
     h=round(h/(9/6))
     img=img.resize((w,h), Image.ANTIALIAS)
+    currx = 0
+    curry = 0
+    imgnew = Image.new('RGB', (w*6, h*9), (255,255,255))
+    fnt=ImageFont.truetype("/Library/Fonts/Courier New.ttf", 10)
+    d = ImageDraw.Draw(imgnew)
     for color in img.getdata():
-        if len(line)==w:
-            out=out+"\n"+line
-            line=""
-            lines+=1
+        if currx==w*6:
+            curry+=9
+            currx=0
         try:
             r=color[0]
             g=color[1]
             b=color[2]
-            #0.3*r + 0.59*g + 0.11*b
-            line=line+grey[round(((0.2126*r + 0.7152*g + 0.0722*b)/255)*(len(grey)-1))]
-        except TypeError:
-            line=line+grey[round((color/255)*(len(grey)-1))]
-    imgnew = Image.new('L', (w*6, lines*9), (255))
-    fnt=ImageFont.truetype("/Library/Fonts/Courier New.ttf", 10)
-    d = ImageDraw.Draw(imgnew)
-    d.multiline_text((0, -10), out,fill=(0),font=fnt,spacing=0)
+            h, l, s = rgb_to_hls(r/255, g/255, b/255)
+            col = tuple(map(lambda x: round(x*255), hls_to_rgb(h, l, 1)))
+            d.text((currx, curry), grey[round(((0.2126*r + 0.7152*g + 0.0722*b)/255)*(len(grey)-1))], fill=col, font=fnt)
+        except TypeError as e:
+            print(e)
+            d.text((currx, curry), grey[round((color/255)*(len(grey)-1))], fill=hls_to_rgb(h, l, 1), font=fnt, spacing=0)
+        finally:
+            currx+=6
     return imgnew
 
 while True:
