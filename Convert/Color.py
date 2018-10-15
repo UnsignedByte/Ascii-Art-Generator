@@ -2,7 +2,7 @@
 # @Date:   15:53:54, 15-Oct-2018
 # @Filename: Color.py
 # @Last modified by:   edl
-# @Last modified time: 16:04:21, 15-Oct-2018
+# @Last modified time: 16:19:48, 15-Oct-2018
 
 
 from PIL import Image,ImageDraw,ImageFont
@@ -61,27 +61,30 @@ while True:
         print("Invalid Input")
         exit(0)
     filename=input("FileName:")
-    #try:
-    image = Image.open(fpath+'/input/%s' % filename)
-    if filename.split(".")[1]=="gif":
-        gif=[]
-        mypalette = image.getpalette()
-        while True:
+    try:
+        image = Image.open(fpath+'/input/%s' % filename)
+        if filename.split(".")[1]=="gif":
+            gif=[]
+            mypalette = image.getpalette()
+            while True:
+                try:
+                    image.putpalette(mypalette)
+                    new_im = Image.new("RGBA", image.size)
+                    new_im.paste(image)
+                    gif.append(Convert(new_im))
+                    image.seek(image.tell() + 1)
+                except EOFError:
+                    break
+            gif[0].save(fpath+'/output/%s.gif' %(filename.split(".")[0]),save_all=True,append_images=gif[1:])
+            Image.open(fpath+'/output/%s.gif' %(filename.split(".")[0])).show()
+        else:
             try:
-                image.putpalette(mypalette)
-                new_im = Image.new("RGBA", image.size)
-                new_im.paste(image)
-                gif.append(Convert(new_im))
-                image.seek(image.tell() + 1)
-            except EOFError:
-                break
-        gif[0].save(fpath+'/output/%s.gif' %(filename.split(".")[0]),save_all=True,append_images=gif[1:])
-        Image.open(fpath+'/output/%s.gif' %(filename.split(".")[0])).show()
-    else:
-        rgb_image = Image.new("RGBA", image.size, "WHITE") # Create a white rgba background
-        rgb_image.paste(image, (0, 0), image)              # Paste the image on the background. Go to the links given below for details.
-        rgb_image.convert('RGB')
-        Convert(rgb_image).save(fpath+"/output/%s.png" %(filename.split(".")[0]))
-        Image.open(fpath+'/output/%s.png' %(filename.split(".")[0])).show()
-    #except Exception:
- #       print("incompatible/missing file")
+                rgb_image = Image.new("RGBA", image.size, "WHITE") # Create a white rgba background
+                rgb_image.paste(image, (0, 0), image)              # Paste the image on the background. Go to the links given below for details.
+            except ValueError:
+                rgb_image = image
+            rgb_image.convert('RGB')
+            Convert(rgb_image).save(fpath+"/output/%s.png" %(filename.split(".")[0]))
+            Image.open(fpath+'/output/%s.png' %(filename.split(".")[0])).show()
+    except Exception:
+       print("incompatible/missing file")
