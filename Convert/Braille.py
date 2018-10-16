@@ -2,9 +2,10 @@
 # @Date:   17:50:23, 15-Oct-2018
 # @Filename: Braille.py
 # @Last modified by:   edl
-# @Last modified time: 10:45:11, 16-Oct-2018
+# @Last modified time: 16:16:36, 16-Oct-2018
 
-CONST_WHITE = 0.2
+CONST_WHITE = 0.1
+WHITE_THRESHOLD = 0.3
 
 BRAILLES = [chr(i) for i in range(int('2800', 16), int('2900', 16))]
 
@@ -16,17 +17,15 @@ fpath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def sigmoidSquish(x):
     return 1/(1+math.e**(x/-100000))
 
-def isInt(s):
+def isNum(s):
     try:
-        int(s)
+        float(s)
         return True
     except ValueError:
         return False
 
 def CALC_WHITE(x):
-    if x < CONST_WHITE: return 0
-    elif round(x) == 0: return 1
-    else: return 2
+    return 0 if x < CONST_WHITE else tround(x)+1
 
 def Braille(img, max, fsize):
     w,h=img.size
@@ -39,7 +38,8 @@ def Braille(img, max, fsize):
     w = round(w//2*2)
     h = round(h//4*4)
 
-    enhancement = ((-sigmoidSquish(w*h)+1)+1)**7
+    enhancement = ((-sigmoidSquish(w*h)+1)+1)**6
+    # enhancement = 1
     img = ImageEnhance.Sharpness(img.resize((w,h), Image.ANTIALIAS)).enhance(enhancement)
     print("Sharpness factor: "+str(enhancement))
     colors = []
@@ -65,16 +65,19 @@ def Braille(img, max, fsize):
             if list(map(lambda x:CALC_WHITE(x), [aa, bb, cc, dd, ee, ff, gg, hh])) == [1]*8:
                 line+=BRAILLES[64]
             else:
-                line+=BRAILLES[64*(round(hh)*2+round(gg))+int(''.join(list(map(lambda x:str(round(x)), [ff,dd,bb,ee,cc,aa]))), 2)]
+                line+=BRAILLES[64*(tround(hh)*2+tround(gg))+int(''.join(list(map(lambda x:str(tround(x)), [ff,dd,bb,ee,cc,aa]))), 2)]
         out+=line.rstrip('\u2800')+"\n"
 
     return out.strip("\n")
+
+def tround(x):
+    return 0 if x<WHITE_THRESHOLD else 1
 
 while True:
     res = input("Maximum Characters (type \"inf\" for no max):")
     if res.lower() == "inf":
         max = 4000000
-    elif isInt(res.lower()):
+    elif isNum(res):
         max = int(res)
     else:
         print("Invalid Input")
@@ -100,6 +103,15 @@ while True:
                 except Exception:
                     print("Invalid Input")
                     exit(0)
+
+            res = input("White Threshhold (1 for all white, 0 for all black, def for default (0.3)):")
+            if res.lower() == "def":
+                WHITE_THRESHOLD = 0.3
+            elif isNum(res) and 0 <= float(res) <= 1:
+                WHITE_THRESHOLD = float(res)
+            else:
+                print("Invalid Input")
+                exit(0)
 
             rgb_image.convert('RGB')
 
