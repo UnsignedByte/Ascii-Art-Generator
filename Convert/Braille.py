@@ -2,7 +2,7 @@
 # @Date:   17:50:23, 15-Oct-2018
 # @Filename: Braille.py
 # @Last modified by:   edl
-# @Last modified time: 09:55:33, 16-Oct-2018
+# @Last modified time: 10:45:11, 16-Oct-2018
 
 CONST_WHITE = 0.2
 
@@ -28,9 +28,10 @@ def CALC_WHITE(x):
     elif round(x) == 0: return 1
     else: return 2
 
-def Braille(img, max):
+def Braille(img, max, fsize):
     w,h=img.size
     out=""
+    h/=fsize[1]/fsize[0] * 1/2
     if max is not None:
         f = math.sqrt(max/(h/4*w/2))
         w *=f
@@ -67,7 +68,7 @@ def Braille(img, max):
                 line+=BRAILLES[64*(round(hh)*2+round(gg))+int(''.join(list(map(lambda x:str(round(x)), [ff,dd,bb,ee,cc,aa]))), 2)]
         out+=line.rstrip('\u2800')+"\n"
 
-    return out
+    return out.strip("\n")
 
 while True:
     res = input("Maximum Characters (type \"inf\" for no max):")
@@ -89,9 +90,20 @@ while True:
                 rgb_image.paste(image, (0, 0), image)              # Paste the image on the background. Go to the links given below for details.
             except ValueError:
                 rgb_image = image
+
+            res = input("Text font width, height (separate with space), \"def\" for default:")
+            if res.lower() == "def":
+                fsize = (9, 18)
+            else:
+                try:
+                    fsize = tuple(map(int, res.split(",")))
+                except Exception:
+                    print("Invalid Input")
+                    exit(0)
+
             rgb_image.convert('RGB')
 
-            tupg = Braille(rgb_image, max)
+            tupg = Braille(rgb_image, max, fsize)
             print("%s characters written." %len(tupg))
 
             with open(fpath+"/output_text/%s.txt" %(filename.split(".")[0]), "w") as f:
