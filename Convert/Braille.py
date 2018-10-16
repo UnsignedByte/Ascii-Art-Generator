@@ -2,7 +2,7 @@
 # @Date:   17:50:23, 15-Oct-2018
 # @Filename: Braille.py
 # @Last modified by:   edl
-# @Last modified time: 22:23:13, 15-Oct-2018
+# @Last modified time: 09:55:33, 16-Oct-2018
 
 CONST_WHITE = 0.2
 
@@ -91,7 +91,7 @@ while True:
                 rgb_image = image
             rgb_image.convert('RGB')
 
-            tupg = Braille(rgb_image, max, fsize)
+            tupg = Braille(rgb_image, max)
             print("%s characters written." %len(tupg))
 
             with open(fpath+"/output_text/%s.txt" %(filename.split(".")[0]), "w") as f:
