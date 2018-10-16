@@ -2,15 +2,12 @@
 # @Date:   15:53:50, 15-Oct-2018
 # @Filename: Black&White.py
 # @Last modified by:   edl
-# @Last modified time: 19:22:48, 15-Oct-2018
+# @Last modified time: 22:12:02, 15-Oct-2018
 from PIL import Image,ImageDraw,ImageFont,ImageEnhance
 import os
 import math
 #grey=list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
 fpath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-with open(fpath+"/char.txt", "rb") as file:
-    grey=file.read().decode('UTF-8').split(chr(166))
 
 def sigmoidSquish(x):
     return 1/(1+math.e**(x/-100000))
@@ -81,7 +78,8 @@ while True:
     if res.lower() == "ascii":
         grey = list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^'. ")
     elif res.lower() == "unicode":
-        pass
+        with open(fpath+"/char.txt", "rb") as file:
+            grey=file.read().decode('UTF-8').split(chr(166))
     else:
         print("Invalid Input")
         exit(0)
@@ -94,42 +92,42 @@ while True:
         print("Invalid Input")
         exit(0)
     filename=input("FileName:")
-    # try:
-    image = Image.open(fpath+'/input/%s' % filename)
-    if filename.split(".")[1]=="gif":
-        gif=[]
-        mypalette = image.getpalette()
-        while True:
-            try:
-                image.putpalette(mypalette)
-                new_im = Image.new("RGBA", image.size)
-                new_im.paste(image)
-                gif.append(GreyScale(new_im, max)[0])
-                image.seek(image.tell() + 1)
-            except EOFError:
-                break
-        gif[0].save(fpath+'/output/%s.gif' %(filename.split(".")[0]),save_all=True,append_images=gif[1:])
-    else:
-        try:
-            rgb_image = Image.new("RGBA", image.size, "WHITE") # Create a white rgba background
-            rgb_image.paste(image, (0, 0), image)              # Paste the image on the background. Go to the links given below for details.
-        except ValueError:
-            rgb_image = image
-        res = input("Text font width, height (separate with space), \"def\" for default:")
-        if res.lower() == "def":
-            fsize = (6, 9)
+    try:
+        image = Image.open(fpath+'/input/%s' % filename)
+        if filename.split(".")[1]=="gif":
+            gif=[]
+            mypalette = image.getpalette()
+            while True:
+                try:
+                    image.putpalette(mypalette)
+                    new_im = Image.new("RGBA", image.size)
+                    new_im.paste(image)
+                    gif.append(GreyScale(new_im, max)[0])
+                    image.seek(image.tell() + 1)
+                except EOFError:
+                    break
+            gif[0].save(fpath+'/output/%s.gif' %(filename.split(".")[0]),save_all=True,append_images=gif[1:])
         else:
             try:
-                fsize = tuple(map(int, res.split(",")))
-            except Exception:
-                print("Invalid Input")
-                exit(0)
-        rgb_image.convert('RGB')
-        tupg = GreyScale(rgb_image, max, fsize)
-        tupg[0].save(fpath+"/output/%s.png" %(filename.split(".")[0]))
-        print("%s characters written." %len(tupg[1]))
+                rgb_image = Image.new("RGBA", image.size, "WHITE") # Create a white rgba background
+                rgb_image.paste(image, (0, 0), image)              # Paste the image on the background. Go to the links given below for details.
+            except ValueError:
+                rgb_image = image
+            res = input("Text font width, height (separate with space), \"def\" for default:")
+            if res.lower() == "def":
+                fsize = (6, 9)
+            else:
+                try:
+                    fsize = tuple(map(int, res.split(",")))
+                except Exception:
+                    print("Invalid Input")
+                    exit(0)
+            rgb_image.convert('RGB')
+            tupg = GreyScale(rgb_image, max, fsize)
+            tupg[0].save(fpath+"/output/%s.png" %(filename.split(".")[0]))
+            print("%s characters written." %len(tupg[1]))
 
-        with open(fpath+"/output_text/%s.txt" %(filename.split(".")[0]), "w") as f:
-            f.write(tupg[1])
-    # except Exception:
-    #     print("incompatible/missing file")
+            with open(fpath+"/output_text/%s.txt" %(filename.split(".")[0]), "w") as f:
+                f.write(tupg[1])
+    except Exception:
+        print("incompatible/missing file")
