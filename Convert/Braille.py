@@ -2,7 +2,7 @@
 # @Date:   17:50:23, 15-Oct-2018
 # @Filename: Braille.py
 # @Last modified by:   edl
-# @Last modified time: 22:17:22, 15-Oct-2018
+# @Last modified time: 22:23:13, 15-Oct-2018
 
 CONST_WHITE = 0.2
 
@@ -28,10 +28,9 @@ def CALC_WHITE(x):
     elif round(x) == 0: return 1
     else: return 2
 
-def Braille(img, max, fsize):
+def Braille(img, max):
     w,h=img.size
     out=""
-    h/=(fsize[1]/fsize[0])
     if max is not None:
         f = math.sqrt(max/(h/4*w/2))
         w *=f
@@ -91,16 +90,6 @@ while True:
             except ValueError:
                 rgb_image = image
             rgb_image.convert('RGB')
-
-            res = input("Text font width, height (separate with space), \"def\" for default:")
-            if res.lower() == "def":
-                fsize = (8, 13)
-            else:
-                try:
-                    fsize = tuple(map(int, res.split(",")))
-                except Exception:
-                    print("Invalid Input")
-                    exit(0)
 
             tupg = Braille(rgb_image, max, fsize)
             print("%s characters written." %len(tupg))
