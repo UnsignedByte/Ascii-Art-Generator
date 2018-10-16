@@ -2,28 +2,36 @@
 # @Date:   15:53:50, 15-Oct-2018
 # @Filename: Black&White.py
 # @Last modified by:   edl
-# @Last modified time: 16:19:41, 15-Oct-2018
+# @Last modified time: 16:56:19, 15-Oct-2018
 from PIL import Image,ImageDraw,ImageFont
 import os
+import math
 #grey=list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
 fpath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 with open(fpath+"/char.txt", "rb") as file:
     grey=file.read().decode('UTF-8').split(chr(166))
 
-def GreyScale(img):
+def isInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+def GreyScale(img, max):
     line=""
     lines=1
     w,h=img.size
     out=""
-    if w>1620:
-        h=(h/w)*1620
-        w=1620
-    if h>1620:
-        w=(w/h)*1620
-        h=1620
-    w=round(w)
-    h=round(h/(9/6))
+    h/=(9/6)
+    if max is not None:
+        f = math.sqrt(max/(h*w))
+        w *=f
+        h *=f
+    w = math.floor(w)
+    h = math.floor(h)
+    # print(w, h, w*h)
     img=img.resize((w,h), Image.ANTIALIAS)
     for color in img.getdata():
         if len(line)==w:
@@ -42,7 +50,7 @@ def GreyScale(img):
     fnt=ImageFont.truetype("/Library/Fonts/Courier New.ttf", 10)
     d = ImageDraw.Draw(imgnew)
     d.multiline_text((0, -10), out,fill=(0),font=fnt,spacing=0)
-    return imgnew
+    return (imgnew, out)
 
 while True:
     res = input("Ascii or Unicode:")
@@ -50,6 +58,14 @@ while True:
         grey = list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
     elif res.lower() == "unicode":
         pass
+    else:
+        print("Invalid Input")
+        exit(0)
+    res = input("Maximum Characters (type \"inf\" for no max):")
+    if res.lower() == "inf":
+        max = 4000000
+    elif isInt(res.lower()):
+        max = int(res)
     else:
         print("Invalid Input")
         exit(0)
@@ -64,7 +80,7 @@ while True:
                 image.putpalette(mypalette)
                 new_im = Image.new("RGBA", image.size)
                 new_im.paste(image)
-                gif.append(GreyScale(new_im))
+                gif.append(GreyScale(new_im, max)[0])
                 image.seek(image.tell() + 1)
             except EOFError:
                 break
@@ -77,7 +93,11 @@ while True:
         except ValueError:
             rgb_image = image
         rgb_image.convert('RGB')
-        GreyScale(rgb_image).save(fpath+"/output/%s.png" %(filename.split(".")[0]))
+        tupg = GreyScale(rgb_image, max)
+        tupg[0].save(fpath+"/output/%s.png" %(filename.split(".")[0]))
+
+        with open(fpath+"/output_text/%s.txt" %(filename.split(".")[0]), "w") as f:
+            f.write(tupg[1])
         Image.open(fpath+'/output/%s.png' %(filename.split(".")[0])).show()
     # except Exception:
     #     print("incompatible/missing file")
