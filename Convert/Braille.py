@@ -2,14 +2,14 @@
 # @Date:   17:50:23, 15-Oct-2018
 # @Filename: Braille.py
 # @Last modified by:   edl
-# @Last modified time: 16:16:36, 16-Oct-2018
+# @Last modified time: 19:57:10, 16-Oct-2018
 
 CONST_WHITE = 0.1
 WHITE_THRESHOLD = 0.3
 
 BRAILLES = [chr(i) for i in range(int('2800', 16), int('2900', 16))]
 
-from PIL import Image,ImageDraw,ImageFont,ImageEnhance
+from PIL import Image,ImageDraw,ImageFont,ImageEnhance, ImageOps
 import os
 import math
 fpath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,7 +29,7 @@ def CALC_WHITE(x):
 
 def Braille(img, max, fsize):
     w,h=img.size
-    out=""
+    out=[]
     h/=fsize[1]/fsize[0] * 1/2
     if max is not None:
         f = math.sqrt(max/(h/4*w/2))
@@ -66,7 +66,11 @@ def Braille(img, max, fsize):
                 line+=BRAILLES[64]
             else:
                 line+=BRAILLES[64*(tround(hh)*2+tround(gg))+int(''.join(list(map(lambda x:str(tround(x)), [ff,dd,bb,ee,cc,aa]))), 2)]
-        out+=line.rstrip('\u2800')+"\n"
+        out.append(line)
+    mr = w
+    for i in out:
+        mr = min(len(i)-len(i.lstrip('\u2800')), mr)
+    out = '\n'.join([i[mr:].rstrip('\u2800') for i in out])
 
     return out.strip("\n")
 
@@ -109,6 +113,14 @@ while True:
                 WHITE_THRESHOLD = 0.3
             elif isNum(res) and 0 <= float(res) <= 1:
                 WHITE_THRESHOLD = float(res)
+            else:
+                print("Invalid Input")
+                exit(0)
+            res = input("Invert image:")
+            if res.lower() == "yes":
+                rgb_image = ImageOps.invert(rgb_image)
+            elif res.lower() == "no":
+                pass
             else:
                 print("Invalid Input")
                 exit(0)
