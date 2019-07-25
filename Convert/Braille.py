@@ -2,7 +2,7 @@
 # @Date:   17:50:23, 15-Oct-2018
 # @Filename: Braille.py
 # @Last modified by:   edl
-# @Last modified time: 19:57:10, 16-Oct-2018
+# @Last modified time: 19:20:21, 25-Oct-2018
 
 CONST_WHITE = 0.1
 WHITE_THRESHOLD = 0.3
@@ -10,6 +10,7 @@ WHITE_THRESHOLD = 0.3
 BRAILLES = [chr(i) for i in range(int('2800', 16), int('2900', 16))]
 
 from PIL import Image,ImageDraw,ImageFont,ImageEnhance, ImageOps
+import traceback
 import os
 import math
 fpath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,23 +28,25 @@ def isNum(s):
 def CALC_WHITE(x):
     return 0 if x < CONST_WHITE else tround(x)+1
 
-def Braille(img, max, fsize):
-    w,h=img.size
+def Braille(img, max, fsize, depth = 0, nmax = None):
+    if not nmax:
+        nmax = max
+    n_img = img
+    w,h=n_img.size
     out=[]
     h/=fsize[1]/fsize[0] * 1/2
-    if max is not None:
-        f = math.sqrt(max/(h/4*w/2))
-        w *=f
-        h *=f
+    f = math.sqrt(nmax/(h/4*(w/2)))
+    w *=f
+    h *=f
     w = round(w//2*2)
     h = round(h//4*4)
 
     enhancement = ((-sigmoidSquish(w*h)+1)+1)**6
     # enhancement = 1
-    img = ImageEnhance.Sharpness(img.resize((w,h), Image.ANTIALIAS)).enhance(enhancement)
+    n_img = ImageEnhance.Sharpness(n_img.resize((w,h), Image.ANTIALIAS)).enhance(enhancement)
     print("Sharpness factor: "+str(enhancement))
     colors = []
-    for color in img.getdata():
+    for color in n_img.getdata():
         try:
             r=color[0]
             g=color[1]
@@ -70,9 +73,14 @@ def Braille(img, max, fsize):
     mr = w
     for i in out:
         mr = min(len(i)-len(i.lstrip('\u2800')), mr)
-    out = '\n'.join([i[mr:].rstrip('\u2800') for i in out])
+    out = '\n'.join([i[mr:].rstrip('\u2800') for i in out]).strip("\n")
 
-    return out.strip("\n")
+    if depth < 5:
+        nout = Braille(img, max, fsize, depth = depth+1, nmax = nmax+max-len(out))
+        if len(out) < max and  len(nout)> max:
+            return out
+        return nout
+    return out
 
 def tround(x):
     return 0 if x<WHITE_THRESHOLD else 1
@@ -87,50 +95,51 @@ while True:
         print("Invalid Input")
         exit(0)
     filename=input("FileName:")
-    try:
-        image = Image.open(fpath+'/input/%s' % filename)
-        if filename.split(".")[1]=="gif":
-            print("gif not supported")
+    # try:
+    image = Image.open(fpath+'/input/%s' % filename)
+    if filename.split(".")[1]=="gif":
+        print("gif not supported")
+    else:
+        try:
+            rgb_image = Image.new("RGBA", image.size, "WHITE") # Create a white rgba background
+            rgb_image.paste(image, (0, 0), image)              # Paste the image on the background. Go to the links given below for details.
+        except ValueError:
+            rgb_image = image
+
+        res = input("Text font width, height (separate with space), \"def\" for default:")
+        if res.lower() == "def":
+            fsize = (9, 18)
         else:
             try:
-                rgb_image = Image.new("RGBA", image.size, "WHITE") # Create a white rgba background
-                rgb_image.paste(image, (0, 0), image)              # Paste the image on the background. Go to the links given below for details.
-            except ValueError:
-                rgb_image = image
-
-            res = input("Text font width, height (separate with space), \"def\" for default:")
-            if res.lower() == "def":
-                fsize = (9, 18)
-            else:
-                try:
-                    fsize = tuple(map(int, res.split(",")))
-                except Exception:
-                    print("Invalid Input")
-                    exit(0)
-
-            res = input("White Threshhold (1 for all white, 0 for all black, def for default (0.3)):")
-            if res.lower() == "def":
-                WHITE_THRESHOLD = 0.3
-            elif isNum(res) and 0 <= float(res) <= 1:
-                WHITE_THRESHOLD = float(res)
-            else:
-                print("Invalid Input")
-                exit(0)
-            res = input("Invert image:")
-            if res.lower() == "yes":
-                rgb_image = ImageOps.invert(rgb_image)
-            elif res.lower() == "no":
-                pass
-            else:
+                fsize = tuple(map(int, res.split(",")))
+            except Exception:
                 print("Invalid Input")
                 exit(0)
 
-            rgb_image.convert('RGB')
+        res = input("White Threshhold (1 for all white, 0 for all black, def for default (0.3)):")
+        if res.lower() == "def":
+            WHITE_THRESHOLD = 0.3
+        elif isNum(res) and 0 <= float(res) <= 1:
+            WHITE_THRESHOLD = float(res)
+        else:
+            print("Invalid Input")
+            exit(0)
+        res = input("Invert image:")
+        if res.lower() == "yes":
+            rgb_image = ImageOps.invert(rgb_image)
+        elif res.lower() == "no":
+            pass
+        else:
+            print("Invalid Input")
+            exit(0)
 
-            tupg = Braille(rgb_image, max, fsize)
-            print("%s characters written." %len(tupg))
+        rgb_image.convert('RGB')
 
-            with open(fpath+"/output_text/%s.txt" %(filename.split(".")[0]), "w") as f:
-                f.write(tupg)
-    except Exception:
-        print("incompatible/missing file")
+        tupg = Braille(rgb_image, max, fsize)
+        print("%s characters written." %len(tupg))
+
+        with open(fpath+"/output_text/%s.txt" %(filename.split(".")[0]), "w") as f:
+            f.write(tupg)
+    # except Exception as err:
+    #     print(err)
+    #     print("incompatible/missing file")
