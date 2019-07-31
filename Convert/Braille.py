@@ -2,7 +2,7 @@
 # @Date:   17:50:23, 15-Oct-2018
 # @Filename: Braille.py
 # @Last modified by:   edl
-# @Last modified time: 19:20:21, 25-Oct-2018
+# @Last modified time: 10:50:06, 31-Jul-2019
 
 CONST_WHITE = 0.1
 WHITE_THRESHOLD = 0.3
@@ -106,7 +106,7 @@ while True:
         except ValueError:
             rgb_image = image
 
-        res = input("Text font width, height (separate with space), \"def\" for default:")
+        res = input("Text font width, height (separate with comma), \"def\" for default:")
         if res.lower() == "def":
             fsize = (9, 18)
         else:
